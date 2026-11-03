@@ -26,7 +26,9 @@ npm run build:artifact   # dist/ for the Claude-hosted page
 - **Snooze** (running timers): the current run finishes silently and starts over. The next finish alerts normally. Press again to cancel.
 - **Cycle counter**: how many times the timer has reached zero (snoozed runs included), with its own reset button. Resetting the timer doesn't clear it.
 - **Dismiss** a finished timer: Repeat on starts the next cycle now; Repeat off goes back to Ready.
-- Header: **theme** (Ink, Daylight, Paper, Dusk, Contrast), **Grid | List**, **Zen** switch (only name, mute icon, time and progress; click a finished timer to dismiss it), **Hide/Show settings**, **+ New timer** (or **N**). All of these are remembered.
+- Header: **Grid | List**, **Zen** switch (on by default: only name, mute icon, time and progress; click a finished timer to dismiss it; adding a timer leaves Zen so you can set it up), **Hide/Show settings**, **+ New timer** (or **N**). All of these are remembered.
+- **Hints**: point at (or focus) any control to see a one-line explanation of what it does, under the card or in the header's summary line.
+- One dark look, on purpose.
 - Saved in `localStorage`. Timers keep counting while the page is closed and catch up when you return.
 - Optional browser notifications when the tab is in the background. The tab title shows the next timer to finish.
 

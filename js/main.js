@@ -27,8 +27,11 @@ if (firstRun) {
 // "No sound" used to be a sound choice; it is now the per-timer mute switch.
 timers = timers.map((t) => (t.soundId === 'none' ? { ...t, soundId: 'chime', muted: true } : t));
 
-settings = { view: 'grid', collapsed: [], skin: 'ink', zen: false, ...settings };
-document.documentElement.dataset.skin = settings.skin;
+settings = { view: 'grid', collapsed: [], zen: true, ...settings };
+delete settings.skin; // themes were removed
+// Zen became the default: switch it on once for people who already had settings
+// saved; after that their own choice sticks.
+if (!settings.zenDefaultApplied) settings = { ...settings, zen: true, zenDefaultApplied: true };
 
 const getTimer = (id) => timers.find((t) => t.id === id);
 const isCollapsed = (id) => settings.collapsed.includes(id);
@@ -66,8 +69,6 @@ const cards = new Map(); // timerId -> card element (kept between renders so foc
 function render() {
   empty.hidden = timers.length > 0;
   list.classList.toggle('list-view', settings.view === 'list');
-  document.documentElement.dataset.skin = settings.skin;
-  document.querySelectorAll('button[data-skin]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.skin === settings.skin)));
   document.querySelectorAll('button[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === settings.view)));
   const anyOpen = timers.some((t) => !isCollapsed(t.id));
   collapseAllBtn.textContent = anyOpen ? 'Hide settings' : 'Show settings';
@@ -87,6 +88,7 @@ function render() {
   });
   updateSummary();
   updateTitle();
+  refreshHint(); // a button under the pointer may have changed (Start -> Pause)
 }
 
 function buildCard(timer) {
@@ -140,6 +142,7 @@ function syncCard(card, timer) {
 
   const primary = card.querySelector('[data-role="primary"]');
   const secondary = card.querySelector('[data-role="secondary"]');
+  const restart = timer.status === T.STATUS.DONE;
   const [pLabel, pAction, sLabel, sAction] = {
     idle: ['Start', 'start', null, null],
     running: ['Pause', 'pause', 'Reset', 'reset'],
@@ -148,8 +151,9 @@ function syncCard(card, timer) {
   }[timer.status];
   primary.textContent = pLabel;
   primary.dataset.action = pAction;
+  primary.dataset.hint = ACTION_HINT[restart ? 'restart' : timer.status === T.STATUS.PAUSED ? 'resume' : pAction];
   secondary.hidden = !sLabel;
-  if (sLabel) { secondary.textContent = sLabel; secondary.dataset.action = sAction; }
+  if (sLabel) { secondary.textContent = sLabel; secondary.dataset.action = sAction; secondary.dataset.hint = ACTION_HINT[sAction]; }
 
   const collapsed = isCollapsed(timer.id);
   card.querySelector('[data-role="panel"]').hidden = collapsed;
@@ -161,6 +165,15 @@ function syncCard(card, timer) {
 
   updateCardTime(card, timer);
 }
+
+const ACTION_HINT = {
+  start: 'Start counting down',
+  resume: 'Continue from where it was paused',
+  pause: 'Pause; resume later from the same time',
+  reset: 'Stop and go back to the full length',
+  dismiss: 'Stop the alert. With Repeat on, the next cycle starts now; otherwise back to Ready',
+};
+ACTION_HINT.restart = 'Start a new run from the full length';
 
 function updateCardTime(card, timer, now = Date.now()) {
   const left = T.remainingMs(timer, now);
@@ -177,6 +190,7 @@ function updateCardTime(card, timer, now = Date.now()) {
 }
 
 function updateSummary() {
+  if ($('#summary').dataset.hinting) return; // a hint is showing there right now
   const running = timers.filter((t) => t.status === T.STATUS.RUNNING).length;
   const done = timers.filter((t) => t.status === T.STATUS.DONE).length;
   const parts = [`${timers.length} timer${timers.length === 1 ? '' : 's'}`];
@@ -325,6 +339,8 @@ function cardOf(el) {
 }
 
 function addTimer() {
+  // Zen hides the controls, so step out of it to set up the new timer.
+  if (settings.zen) settings = { ...settings, zen: false };
   const timer = T.createTimer({ name: 'New timer', minutes: 10 });
   commit([...timers, timer]);
   const input = field(cards.get(timer.id), 'name');
@@ -532,10 +548,47 @@ list.addEventListener('keydown', (e) => {
   handle.focus(); // moving the card in the DOM can drop focus
 });
 
-$('#new-btn').addEventListener('click', addTimer);
+// ---- Hints: a subtle line explaining whatever control you point at ------------
+// Cards show it in their own hint line; header controls borrow the summary line.
 
-document.querySelectorAll('button[data-skin]').forEach((b) =>
-  b.addEventListener('click', () => setSettings({ skin: b.dataset.skin })));
+function hintTargetFor(el) {
+  const card = el.closest('.timer-card');
+  return card ? card.querySelector('.hint') : $('#summary');
+}
+
+let hinted = null;
+function showHint(el) {
+  if (hinted === el) return;
+  clearHint();
+  const target = hintTargetFor(el);
+  target.dataset.hinting = 'true';
+  if (target.id === 'summary') target.dataset.text = target.textContent;
+  target.textContent = el.dataset.hint;
+  hinted = el;
+}
+function clearHint() {
+  if (!hinted) return;
+  const target = hintTargetFor(hinted);
+  delete target.dataset.hinting;
+  target.textContent = target.id === 'summary' ? target.dataset.text ?? '' : '';
+  hinted = null;
+  if (target.id === 'summary') updateSummary();
+}
+function refreshHint() {
+  if (!hinted) return;
+  if (!hinted.isConnected || hinted.hidden) { clearHint(); return; }
+  hintTargetFor(hinted).textContent = hinted.dataset.hint;
+}
+for (const type of ['pointerover', 'focusin']) {
+  document.addEventListener(type, (e) => {
+    const el = e.target.closest?.('[data-hint]');
+    if (el && !drag) showHint(el);
+    else if (type === 'pointerover' && hinted && !hinted.contains(e.target) && document.activeElement !== hinted) clearHint();
+  });
+}
+document.addEventListener('focusout', (e) => { if (hinted && e.target === hinted) clearHint(); });
+
+$('#new-btn').addEventListener('click', addTimer);
 
 document.querySelectorAll('button[data-view]').forEach((b) =>
   b.addEventListener('click', () => setSettings({ view: b.dataset.view })));

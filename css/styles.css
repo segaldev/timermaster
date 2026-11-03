@@ -1,8 +1,7 @@
 /* Layout: a grid (or list) of instrument-like timer cards; the big readout is
-   the hero of each card. Five user-selectable themes ("skins") below. They use
-   data-skin, not data-theme, which the host page reserves for its own light/dark. */
+   the hero of each card. One dark look ("Ink"), set on purpose regardless of
+   the system theme. */
 :root {
-  /* Ink: default dark */
   --ink: #0d1117;        /* page ground */
   --panel: #151b24;      /* card surface */
   --panel-hi: #1c2430;   /* inputs, hover */
@@ -17,7 +16,6 @@
   --done-glow: rgb(255 122 122 / 0.35);
   --track: var(--line);   /* empty progress bar / switch off */
   --shadow: none;
-  --texture: none;
   --border-w: 1px;
   --readout-weight: 500;
 
@@ -30,85 +28,6 @@
   color-scheme: dark;
 }
 
-/* Daylight: clean light */
-:root[data-skin="daylight"] {
-  --ink: #f3f5f9;
-  --panel: #ffffff;
-  --panel-hi: #edf0f5;
-  --line: #dce1e9;
-  --text: #141a23;
-  --muted: #5d6878;
-  --accent: #3555d6;
-  --accent-ink: #ffffff;
-  --running: #11805b;
-  --paused: #a8650a;
-  --done: #cf323a;
-  --done-glow: rgb(207 50 58 / 0.22);
-  --shadow: 0 1px 2px rgb(20 26 35 / 0.05), 0 6px 18px rgb(20 26 35 / 0.05);
-  color-scheme: light;
-}
-
-/* Paper: warm cream paper, fountain-pen ink, serif numerals */
-:root[data-skin="paper"] {
-  --ink: #f1e9dc;
-  --panel: #fbf7ef;
-  --panel-hi: #f2eadc;
-  --line: #e0d3bd;
-  --text: #2a241d;
-  --muted: #7a6c5b;
-  --accent: #2e4a7d;
-  --accent-ink: #fbf7ef;
-  --running: #46733a;
-  --paused: #a8701a;
-  --done: #a93a35;
-  --done-glow: rgb(169 58 53 / 0.2);
-  --shadow: 0 1px 1px rgb(90 64 30 / 0.06), 0 8px 22px rgb(90 64 30 / 0.07);
-  --texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .18 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --font-readout: "Fraunces", Georgia, serif;
-  --readout-weight: 600;
-  --radius: 10px;
-  color-scheme: light;
-}
-
-/* Dusk: soft plum evening with a peach accent */
-:root[data-skin="dusk"] {
-  --ink: #19141f;
-  --panel: #231c2c;
-  --panel-hi: #2d2538;
-  --line: #3b3148;
-  --text: #f2ebf6;
-  --muted: #a797b5;
-  --accent: #ffb48c;
-  --accent-ink: #19141f;
-  --running: #7fdcb6;
-  --paused: #f6cf7a;
-  --done: #ff8d8d;
-  --done-glow: rgb(255 141 141 / 0.3);
-  --radius: 18px;
-  color-scheme: dark;
-}
-
-/* Contrast: black, white and signal yellow, readable across a room */
-:root[data-skin="contrast"] {
-  --ink: #000000;
-  --panel: #000000;
-  --panel-hi: #1c1c1c;
-  --line: #ffffff;
-  --text: #ffffff;
-  --muted: #d6d6d6;
-  --accent: #ffd60a;
-  --accent-ink: #000000;
-  --running: #5cf59a;
-  --paused: #ffb020;
-  --done: #ff5c5c;
-  --done-glow: rgb(255 92 92 / 0.5);
-  --track: #3a3a3a;
-  --border-w: 2px;
-  --readout-weight: 600;
-  --radius: 8px;
-  color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
@@ -118,7 +37,6 @@ body {
   font-family: var(--font-body);
   font-size: 15px;
   background-color: var(--ink);
-  background-image: var(--texture);
   color: var(--text);
   line-height: 1.45;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -260,7 +178,7 @@ main { padding-block: 8px 56px; }
 
 .btn:focus-visible, .chip:focus-visible, .chip-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.transport { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.transport { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
 .transport .spacer { flex: 1; }
 .confirm { display: inline-flex; gap: 6px; }
 
@@ -408,7 +326,8 @@ main { padding-block: 8px 56px; }
     "top readout transport"
     "progress progress progress"
     "meta meta meta"
-    "chips chips chips";
+    "chips chips chips"
+    "hint hint hint";
   align-items: center;
   column-gap: 20px;
   row-gap: 10px;
@@ -427,46 +346,6 @@ main { padding-block: 8px 56px; }
   .list-view .timer-card { display: flex; align-items: stretch; }
   .list-view .readout, .list-view .transport { flex-wrap: wrap; }
 }
-
-/* ---- Theme picker: swatches show each theme's ground, card and accent ---- */
-.skins { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
-.skins button {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-.skins button[aria-pressed="true"] { border-color: var(--accent); }
-.skins button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.skins .sw {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid rgb(127 127 127 / 0.45);
-  background: linear-gradient(135deg, var(--sw-bg) 0 50%, var(--sw-card) 50% 100%);
-  position: relative;
-}
-.skins .sw::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sw-accent);
-  box-shadow: 0 0 0 1.5px var(--panel);
-}
-.sw-ink { --sw-bg: #0d1117; --sw-card: #1c2430; --sw-accent: #9db0ff; }
-.sw-daylight { --sw-bg: #f3f5f9; --sw-card: #ffffff; --sw-accent: #3555d6; }
-.sw-paper { --sw-bg: #f1e9dc; --sw-card: #fbf7ef; --sw-accent: #2e4a7d; }
-.sw-dusk { --sw-bg: #19141f; --sw-card: #2d2538; --sw-accent: #ffb48c; }
-.sw-contrast { --sw-bg: #000000; --sw-card: #ffffff; --sw-accent: #ffd60a; }
 
 /* ---- Meta row: finish time + cycle counter ---- */
 .readout { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -491,7 +370,8 @@ main { padding-block: 8px 56px; }
 .mini-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .mini-btn .ico { width: 14px; height: 14px; }
 
-.snooze-btn { display: inline-flex; align-items: center; gap: 6px; padding-inline: 10px; }
+.snooze-btn { display: inline-flex; align-items: center; gap: 5px; }
+.transport .snooze-btn { padding-inline: 9px; }
 .snooze-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .timer-card.snoozed .progress-bar { opacity: 0.45; }
 
@@ -569,3 +449,17 @@ main { padding-block: 8px 56px; }
 }
 .timer-card.dragging .drag-handle { opacity: 1; color: var(--accent); cursor: grabbing; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none; }
+
+/* ---- Hints: one quiet line explaining the control you point at ---- */
+.hint {
+  margin: 0;
+  min-height: 1.3em;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--muted);
+  opacity: 0.85;
+}
+.summary[data-hinting] { color: var(--text); }
+.zen .hint { display: none; }
+.list-view .hint { grid-area: hint; }
+.transport .btn:not(.icon-btn):not(.edit-toggle) { padding-inline: 11px; }
