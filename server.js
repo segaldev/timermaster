@@ -18,7 +18,7 @@ const TYPES = {
 
 createServer(async (req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  const file = normalize(join(ROOT, urlPath === '/' ? 'index.html' : urlPath));
+  const file = normalize(join(ROOT, urlPath.endsWith('/') ? `${urlPath}index.html` : urlPath)); // folders serve their index.html
   if (!file.startsWith(ROOT)) return res.writeHead(403).end();
   try {
     const body = await readFile(file);

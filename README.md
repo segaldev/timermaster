@@ -7,7 +7,8 @@ Run many countdown timers at once. Personal use, no accounts, no dependencies.
 ```bash
 npm start      # http://localhost:5173
 npm test       # unit tests for the timer model
-npm run build:artifact   # dist/index.html for the hosted page
+npm run build:site       # _site/ for GitHub Pages or any static host
+npm run build:artifact   # dist/ for the Claude-hosted page
 ```
 
 (ES modules don't load from `file://`, so use the dev server. Any static host works for deployment.)
@@ -29,6 +30,13 @@ npm run build:artifact   # dist/index.html for the hosted page
 - Saved in `localStorage`. Timers keep counting while the page is closed and catch up when you return.
 - Optional browser notifications when the tab is in the background. The tab title shows the next timer to finish.
 
+## Publishing
+
+The site is deployed to GitHub Pages by GitHub Actions on every push to `main`
+(tests must pass first). One-time setup: repo **Settings → Pages → Source: GitHub Actions**.
+
+Live at https://segaldev.github.io/timermaster/
+
 ## Structure
 
 | File | Role |
@@ -39,6 +47,8 @@ npm run build:artifact   # dist/index.html for the hosted page
 | `js/format.js` | Display formatting (minute resolution). |
 | `js/main.js` | UI wiring: keyed in-place rendering (keeps focus while editing), on-card controls, second-aligned ticking, alarms, notifications. |
 | `server.js` | Zero-dependency static dev server. |
+| `scripts/build.js` | Builds `_site/` (web) or `dist/` (Claude-hosted) with content-hashed file names, so browsers never mix old and new files. |
+| `.github/workflows/pages.yml` | On every push to `main`: run tests, build, deploy to GitHub Pages. |
 
 ## Roadmap hooks
 
