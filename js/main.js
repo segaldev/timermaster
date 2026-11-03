@@ -75,6 +75,7 @@ function render() {
   collapseAllBtn.textContent = anyOpen ? 'Hide settings' : 'Show settings';
   collapseAllBtn.hidden = timers.length === 0 || settings.zen;
   list.classList.toggle('zen', settings.zen);
+  document.body.classList.toggle('zen-mode', settings.zen);
   zenBtn.setAttribute('aria-checked', String(settings.zen));
 
   const ids = new Set(timers.map((t) => t.id));
@@ -400,6 +401,7 @@ list.addEventListener('focusin', (e) => {
 list.addEventListener('click', (e) => {
   // Zen mode: the mute icon and cycle reset still work; clicking a finished timer dismisses it.
   if (settings.zen) {
+    if (justDragged || e.target.closest('.drag-handle')) return; // dragging to reorder isn't a click to dismiss
     const id = cardOf(e.target);
     if (id && e.target.closest('[data-action="toggle-mute"]')) {
       updateTimer(id, (t) => T.update(t, { muted: !t.muted }));
@@ -510,7 +512,7 @@ let drag = null; // { id, card, pointerId, lockUntil }
 
 list.addEventListener('pointerdown', (e) => {
   const handle = e.target.closest('.drag-handle');
-  if (!handle || e.button !== 0 || settings.zen) return;
+  if (!handle || e.button !== 0) return;
   e.preventDefault();
   const card = handle.closest('.timer-card');
   drag = { id: card.dataset.id, card, pointerId: e.pointerId, lockUntil: 0 };
@@ -539,8 +541,11 @@ window.addEventListener('pointermove', (e) => {
   if (animateReorder(() => moveTimer(drag.id, to) && (render(), true))) drag.lockUntil = performance.now() + 150;
 });
 
+let justDragged = false; // the click that follows a drag isn't a real click
 function endDrag(e) {
   if (!drag || e.pointerId !== drag.pointerId) return;
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 0);
   drag.card.classList.remove('dragging');
   document.body.classList.remove('is-dragging');
   drag = null;
@@ -620,7 +625,7 @@ document.addEventListener('pointerdown', unlockAudio, { once: true });
 document.addEventListener('keydown', unlockAudio, { once: true });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'n' && !e.metaKey && !e.ctrlKey && !e.altKey
+  if (e.key.toLowerCase() === 'n' && !settings.zen && !e.metaKey && !e.ctrlKey && !e.altKey
       && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
     e.preventDefault();
     addTimer();

@@ -22,11 +22,11 @@ npm run build:artifact   # dist/ for the Claude-hosted page
   - **Repeat** (switch): start the next cycle automatically.
   - **Nudge** (switch): On rings until you dismiss. Off rings 3 times, then restarts (Repeat on, keeping the original schedule) or waits for you (Repeat off).
 - **Mute** (speaker icon next to the name, like a browser tab): click to silence that timer, click again to restore. A muted timer still flashes and notifies.
-- **Reorder**: drag the dotted grip in a card's top-left corner (grid or list), or focus it and use the arrow keys. The order is saved.
+- **Reorder**: drag the dotted grip in a card's top-left corner (grid, list, and in Zen), or focus it and use the arrow keys. The order is saved.
 - **Snooze** (running timers): the current run finishes silently and starts over. The next finish alerts normally. Press again to cancel.
 - **Cycle counter**: how many times the timer has reached zero (snoozed runs included), with its own reset button. Resetting the timer doesn't clear it.
 - **Dismiss** a finished timer: Repeat on starts the next cycle now; Repeat off goes back to Ready.
-- Header: **Grid | List**, **Zen** switch (on by default: only name, mute icon, time, progress and the cycle counter with its reset; click a finished timer to dismiss it; adding a timer leaves Zen so you can set it up), **Hide/Show settings**, **+ New timer** (or **N**). All of these are remembered.
+- Header: **Grid | List**, **Zen** switch (on by default: only name, mute icon, time, progress and the cycle counter with its reset; you can still drag to reorder; the header shows only the Zen switch; click a finished timer to dismiss it; adding a timer leaves Zen so you can set it up), **Hide/Show settings**, **+ New timer** (or **N**). All of these are remembered.
 - **Hints**: point at (or focus) any control to see a one-line explanation of what it does, under the card or in the header's summary line.
 - One dark look, on purpose.
 - Saved in `localStorage`. Timers keep counting while the page is closed and catch up when you return.
