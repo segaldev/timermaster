@@ -1,10 +1,11 @@
 import * as T from './timer.js';
 import { localStore } from './store.js';
-import { SOUNDS, playSound, unlockAudio } from './sounds.js';
+import { SOUNDS, getSound, playSound, previewSound, unlockAudio } from './sounds.js';
 import { formatRemaining, formatDuration, formatClock } from './format.js';
 
 const store = localStore;
-const RING_INTERVAL_MS = 3000;
+const RING_GAP_MS = 1200; // pause between the end of one ring and the next
+const RING_CHECK_MS = 250;
 const NUDGE_OFF_RINGS = 3; // Nudge off: ring this many times, then restart (repeat) or wait
 const STATUS_LABEL = { idle: 'Ready', running: 'Running', paused: 'Paused', done: 'Done' };
 
@@ -124,7 +125,7 @@ function syncCard(card, timer) {
   setValue(field(card, 'hours'), hours);
   setValue(field(card, 'minutes'), pad2(minutes));
   setValue(field(card, 'seconds'), pad2(seconds));
-  setValue(field(card, 'sound'), timer.soundId);
+  setValue(field(card, 'sound'), getSound(timer.soundId).id); // old names map to their replacement
   const mute = card.querySelector('[data-action="toggle-mute"]');
   mute.setAttribute('aria-pressed', String(Boolean(timer.muted)));
   mute.title = mute.ariaLabel = timer.muted ? 'Unmute this timer' : 'Mute this timer';
@@ -249,17 +250,25 @@ function fire(timer) {
   alertSound(timer);
   notify(timer);
   ringing.set(timer.id, 1);
+  lastRing.set(timer.id, Date.now());
 }
 
 // Nudge on: keep ringing until dismissed.
 // Nudge off: ring 3 times, then restart on the original cadence (repeat on) or wait (repeat off).
+// Rings are spaced by the sound's own length, so a long singing bowl isn't cut
+// short and a short beep doesn't wait around.
+const lastRing = new Map(); // timerId -> when it last rang
 function ringAgain() {
+  const now = Date.now();
   for (const [id, count] of ringing) {
     const timer = getTimer(id);
     if (!timer || timer.status !== T.STATUS.DONE) { ringing.delete(id); continue; }
+    const spacing = Math.max(2500, getSound(timer.soundId).seconds * 1000 + RING_GAP_MS);
+    if (now - (lastRing.get(id) ?? 0) < spacing) continue;
     if (timer.nudge || count < NUDGE_OFF_RINGS) {
       alertSound(timer);
       ringing.set(id, count + 1);
+      lastRing.set(id, now);
       continue;
     }
     ringing.delete(id);
@@ -365,7 +374,7 @@ list.addEventListener('change', (e) => {
       break;
     case 'sound':
       updateTimer(id, (t) => T.update(t, { soundId: e.target.value }));
-      playSound(e.target.value);
+      previewSound(e.target.value);
       break;
   }
 });
@@ -633,4 +642,4 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { ti
 refreshNotifyButton();
 render();
 scheduleTick();
-setInterval(ringAgain, RING_INTERVAL_MS);
+setInterval(ringAgain, RING_CHECK_MS);

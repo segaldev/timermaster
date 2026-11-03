@@ -18,7 +18,7 @@ npm run build:artifact   # dist/ for the Claude-hosted page
 - Any number of timers running at once, with a live countdown to the second.
 - **Everything is edited on the card**, with no dialogs: type the name in the title. A compact row of chips holds the rest:
   - **Length** `h m s`: type, or nudge with ↑/↓ or the scroll wheel (Shift = 5 min / 10 s). It's saved when you leave the chip. Range is 1s to 99h 59m 59s. Changing the length of a running timer restarts it.
-  - **Sound**: a picker that plays the sound when changed.
+  - **Sound**: Chime, Church bell, Singing bowl, Marimba, Wind chimes, Kitchen timer, Alarm clock or Digital alarm. Picking one plays it.
   - **Repeat** (switch): start the next cycle automatically.
   - **Nudge** (switch): On rings until you dismiss. Off rings 3 times, then restarts (Repeat on, keeping the original schedule) or waits for you (Repeat off).
 - **Mute** (speaker icon next to the name, like a browser tab): click to silence that timer, click again to restore. A muted timer still flashes and notifies.
@@ -45,7 +45,7 @@ Live at https://segaldev.github.io/timermaster/
 | --- | --- |
 | `js/timer.js` | Pure timer model: create/start/pause/reset/update/complete. Uses absolute `endsAt` timestamps, so it's accurate under tab throttling. No DOM. |
 | `js/store.js` | Persistence (`load`/`save`), versioned. Swap for an API-backed store when accounts arrive. |
-| `js/sounds.js` | Sound registry (Web Audio). Add an entry to `SOUNDS` to add a sound. |
+| `js/sounds.js` | Synthesized sounds (Web Audio): each is built from the overtones of the real instrument (bell, bowl, wooden bars) through a shared room reverb. No audio files. Add an entry to `SOUNDS` to add a sound. |
 | `js/format.js` | Display formatting (minute resolution). |
 | `js/main.js` | UI wiring: keyed in-place rendering (keeps focus while editing), on-card controls, second-aligned ticking, alarms, notifications. |
 | `server.js` | Zero-dependency static dev server. |
