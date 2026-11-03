@@ -398,11 +398,15 @@ list.addEventListener('focusin', (e) => {
 });
 
 list.addEventListener('click', (e) => {
-  // Zen mode: the mute icon still works; clicking a finished timer dismisses it.
+  // Zen mode: the mute icon and cycle reset still work; clicking a finished timer dismisses it.
   if (settings.zen) {
     const id = cardOf(e.target);
     if (id && e.target.closest('[data-action="toggle-mute"]')) {
       updateTimer(id, (t) => T.update(t, { muted: !t.muted }));
+      return;
+    }
+    if (id && e.target.closest('[data-action="reset-cycles"]')) {
+      updateTimer(id, (t) => T.resetCycles(t));
       return;
     }
     if (id && getTimer(id)?.status === T.STATUS.DONE) {
